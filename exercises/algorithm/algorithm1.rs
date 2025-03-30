@@ -2,7 +2,6 @@
 	single linked list merge
 	This problem requires you to merge two ordered singly linked lists into one ordered singly linked list
 */
-// I AM NOT DONE
 
 use std::fmt::{self, Display, Formatter};
 use std::ptr::NonNull;
@@ -29,13 +28,13 @@ struct LinkedList<T> {
     end: Option<NonNull<Node<T>>>,
 }
 
-impl<T> Default for LinkedList<T> {
+impl<T: std::cmp::PartialOrd + Clone> Default for LinkedList<T> {
     fn default() -> Self {
         Self::new()
     }
 }
 
-impl<T> LinkedList<T> {
+impl<T: std::cmp::PartialOrd + Clone> LinkedList<T> {
     pub fn new() -> Self {
         Self {
             length: 0,
@@ -71,12 +70,70 @@ impl<T> LinkedList<T> {
     }
 	pub fn merge(list_a:LinkedList<T>,list_b:LinkedList<T>) -> Self
 	{
-		//TODO
-		Self {
-            length: 0,
-            start: None,
-            end: None,
+        let mut result = LinkedList::new();
+                
+        // Handle empty lists cases
+        if list_a.start.is_none() {
+            return list_b;
         }
+        if list_b.start.is_none() {
+            return list_a;
+        }
+
+        // Since we're going to consume both lists, we need to be careful with ownership
+        // First, convert to raw pointers to make traversal easier
+        let mut a_current = list_a.start;
+        let mut b_current = list_b.start;
+
+
+        while a_current.is_some() || b_current.is_some() {
+            // If one list is empty, add all remaining elements from the other list
+            if a_current.is_none() {
+                while let Some(ptr) = b_current {
+                    unsafe {
+                        let b_val = &(*ptr.as_ptr()).val.clone();
+                        result.add(b_val.clone());
+                        b_current = (*ptr.as_ptr()).next;
+                        // We don't deallocate here, as we're taking ownership
+                    }
+                }
+                break;
+            }
+            
+            if b_current.is_none() {
+                while let Some(ptr) = a_current {
+                    unsafe {
+                        let a_val = & (*ptr.as_ptr()).val;
+                        result.add(a_val.clone());
+                        a_current = (*ptr.as_ptr()).next;
+                        // We don't deallocate here, as we're taking ownership
+                    }
+                }
+                break;
+            }
+            
+            // Both lists have elements, compare and add the smaller one
+            unsafe {
+                let a_val = &(*a_current.unwrap().as_ptr()).val;
+                let b_val = &(*b_current.unwrap().as_ptr()).val;
+                
+                if a_val <= b_val {
+                    result.add((*a_current.unwrap().as_ptr()).val.clone());
+                    a_current = (*a_current.unwrap().as_ptr()).next;
+                } else {
+                    result.add((*b_current.unwrap().as_ptr()).val.clone());
+                    b_current = (*b_current.unwrap().as_ptr()).next;
+                }
+            }
+        }
+
+        result
+		// //TODO
+		// Self {
+        //     length: 0,
+        //     start: None,
+        //     end: None,
+        // }
 	}
 }
 

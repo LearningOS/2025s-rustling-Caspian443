@@ -3,7 +3,6 @@
 	This problem requires you to implement a basic interface for a binary tree
 */
 
-//I AM NOT DONE
 use std::cmp::Ordering;
 use std::fmt::Debug;
 
@@ -51,12 +50,27 @@ where
     // Insert a value into the BST
     fn insert(&mut self, value: T) {
         //TODO
+        if self.root.is_none() {
+            self.root = Some(Box::new(TreeNode::new(value)));
+        } else {
+            if let Some(ref mut root) = self.root {
+                root.insert(value);
+            }
+        }
     }
 
     // Search for a value in the BST
     fn search(&self, value: T) -> bool {
         //TODO
-        true
+        if self.root.is_none() {
+            return false;
+        }
+
+        if let Some(ref root) = self.root {
+            root.search_node(&value)
+        } else {
+            false
+        }
     }
 }
 
@@ -67,6 +81,47 @@ where
     // Insert a node into the tree
     fn insert(&mut self, value: T) {
         //TODO
+        match self.value.cmp(&value) {
+            Ordering::Equal => {
+                // Value already exists, do nothing
+            },
+            Ordering::Greater => {
+                // Insert to the left subtree
+                match self.left {
+                    Some(ref mut left) => left.insert(value),
+                    None => self.left = Some(Box::new(TreeNode::new(value))),
+                }
+            },
+            Ordering::Less => {
+                // Insert to the right subtree
+                match self.right {
+                    Some(ref mut right) => right.insert(value),
+                    None => self.right = Some(Box::new(TreeNode::new(value))),
+                }
+            },
+        }
+    }
+
+    // Search for a value in the tree
+    fn search_node(&self, value: &T) -> bool {
+        //TODO
+        match self.value.cmp(value) {
+            Ordering::Equal => true,
+            Ordering::Greater => {
+                if let Some(ref left) = self.left {
+                    left.search_node(value)
+                } else {
+                    false
+                }
+            },
+            Ordering::Less => {
+                if let Some(ref right) = self.right {
+                    right.search_node(value)
+                } else {
+                    false
+                }
+            },
+        }
     }
 }
 

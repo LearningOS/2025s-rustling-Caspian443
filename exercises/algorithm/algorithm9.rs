@@ -2,7 +2,6 @@
 	heap
 	This question requires you to implement a binary heap function
 */
-// I AM NOT DONE
 
 use std::cmp::Ord;
 use std::default::Default;
@@ -37,7 +36,25 @@ where
     }
 
     pub fn add(&mut self, value: T) {
-        //TODO
+        // Add the value to the end of the heap
+        self.items.push(value);
+        self.count += 1;
+        
+        // Bubble up to maintain heap property
+        let mut idx = self.count;
+        
+        // While the item is not the root and satisfies the comparator with its parent
+        while idx > 1 {
+            let parent = self.parent_idx(idx);
+            if (self.comparator)(&self.items[idx], &self.items[parent]) {
+                // Swap with parent
+                self.items.swap(idx, parent);
+                // Move up the tree
+                idx = parent;
+            } else {
+                break;
+            }
+        }
     }
 
     fn parent_idx(&self, idx: usize) -> usize {
@@ -57,8 +74,15 @@ where
     }
 
     fn smallest_child_idx(&self, idx: usize) -> usize {
-        //TODO
-		0
+        let left = self.left_child_idx(idx);
+        let right = self.right_child_idx(idx);
+        
+        // If right child exists and satisfies the comparator with left child
+        if right <= self.count && (self.comparator)(&self.items[right], &self.items[left]) {
+            right
+        } else {
+            left
+        }
     }
 }
 
@@ -79,13 +103,44 @@ where
 
 impl<T> Iterator for Heap<T>
 where
-    T: Default,
+    T: Default + Clone,
 {
     type Item = T;
 
     fn next(&mut self) -> Option<T> {
-        //TODO
-		None
+        if self.is_empty() {
+            return None;
+        }
+        
+        // Take the first meaningful element (index 1, since index 0 contains the default value)
+        // Clone the last element first to avoid borrowing self.items mutably and immutably at the same time
+        let last_item = self.items[self.count].clone();
+        let result = std::mem::replace(&mut self.items[1], last_item);
+        
+        // Remove the last element as it's now duplicated at position 1
+        self.items.pop();
+        self.count -= 1;
+        
+        // If the heap is not empty, bubble down the root element
+        if !self.is_empty() {
+            let mut current = 1;
+            
+            // While there are children and the current element needs to be bubbled down
+            while self.children_present(current) {
+                let child = self.smallest_child_idx(current);
+                
+                // If the child satisfies the comparator with the current element, swap them
+                if (self.comparator)(&self.items[child], &self.items[current]) {
+                    self.items.swap(current, child);
+                    current = child;
+                } else {
+                    // The heap property is satisfied
+                    break;
+                }
+            }
+        }
+        
+        Some(result)
     }
 }
 
